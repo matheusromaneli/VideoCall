@@ -12,8 +12,6 @@ def table_print(cols,rows):
                 spaces[i] = len(col) + 2
             i+=1
 
-    print(spaces)
-
     for x in range(len(cols)):
         s = spaces[x] - len(cols[x])
         s2 = s%2
