@@ -11,10 +11,11 @@ class Callable():
 class Message:
     Message_types = [
         "\0",## Avoid using null terminator by accident
-        "unexpected_message"
+        "unexpected_message",
         "register","accepted_register","declined_register","registry","not_found",
-        "call_request","reject_call","accept_call","occupied"
-        "voice_packet","end_call"
+        "call_request","reject_call","accept_call","occupied",
+        "voice_packet","end_call",
+        "unregister","accepted_unregister",
         ]
 
 
@@ -27,7 +28,7 @@ class Message:
     def __str__(self) -> str:
         return(Message.kind(self.t) + '\n' + json.dumps(self.info, sort_keys=True, indent=3))
     def __repr__(self) -> str:
-        return(Message.kind(self.t) + '\n' + json.dumps(self.info, sort_keys=True))
+        return(Message.kind(self.t) + '; ' + json.dumps(self.info, sort_keys=True))
 
     def kind(t):
         if isinstance(t, str):
@@ -52,12 +53,12 @@ class Message:
 
     def encode(self) -> bytes:
         return self.t + json.dumps(self.info).encode()
-    def decode(_o: bytes, from_addrs=None):
+    def decode(_o: bytes):
         try:
             t = _o[0]
             info = json.loads(_o[1:])
 
-            return Message(t=bytes([t]), from_addrs=from_addrs, **info)
+            return Message(t=bytes([t]), **info)
         except Exception as e:
             print(e)
             return None
@@ -67,7 +68,13 @@ class WSocket():
         self.socket = socket
         self.buffered_message = []
 
+    def accept(self, *args, **kwargs):
+        resp =  self.socket.accept(*args, **kwargs)
+        print("$$ connection accepted!")
+        return resp
+
     def send(self, msg: Message, *args, **kwargs):
+        print(">>", msg.__repr__())
         self.socket.send(msg.encode() + b'\0', *args, **kwargs)
 
     def recv(self, *args, **kwargs) -> Message:
@@ -78,9 +85,11 @@ class WSocket():
         ## Try to decode. If it fails, message is broken, so ignore it.
         msg = self.buffered_message.pop(0)
         try:
-            msg.decode()
+            msg = Message.decode(msg)
+            print("<<", msg.__repr__())
         except:
-            return self.recv( *args, **kwargs) ## Ignore and try again
+            return self.recv(*args, **kwargs) ## Ignore and try again
+        
         return msg ## Decoded correctly
 
     def __getattribute__(self, __name: str):
