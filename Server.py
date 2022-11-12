@@ -3,7 +3,10 @@ import socket
 from threading import Thread
 from Util import *
 
-def table_print(cols,rows):
+def table(cols,rows):
+    rows = [[str(x) for x in col] for col in rows]
+    out = ""
+
     spaces = [len(x) + 2 for x in cols]
     for row in rows:
         i = 0
@@ -18,41 +21,27 @@ def table_print(cols,rows):
         s //= 2
 
         cols[x] = " "*s + cols[x] + " "*(s + s2)
-    print("|" + "|".join(cols) + "|")
+    out += "|" + "|".join(cols) + "|\n"
 
     for row in rows:
         x = 0
         for col in row:
-            print("|",end="")
+            out += "|"
             s = spaces[x] - len(col)
             s2 = s%2
             s //= 2
-            print(" "*s + col + " "*(s + s2),end="")
+            out += " "*s + col + " "*(s + s2)
 
             x+=1
-        print("|")
+        out += "|\n"
         
+    return out
  
 
 def thread(fn, args):
     t = Thread(target=fn, args=args, daemon=True)
     t.start()
 
-
-class User:
-    def __init__(self, socket: WSocket, name: str, udp_address: str):
-        self.name = name
-        self.udp_address = udp_address
-        self.socket = socket
-
-    def send(self, msg: Message):
-        self.socket.send(msg)
-
-    def recv(self, *args, **kwargs):
-        return self.socket.recv(*args, **kwargs)
-
-    def jsonfy(self):
-        return {'name':self.name, 'udp':self.udp_address}
 
 class Users():
     def __init__(self, users = []):
@@ -72,14 +61,14 @@ class Users():
 
     def append(self, user: User):
         self.users.append(user)
-        table_print(["Name", "UDP Address"], self.listfy())
+        print(table(["Name", "Ip", "Porta"], self.listfy()))
     def remove(self, user: User):
         self.users.remove(user)
 
     def jsonfy(self):
         return {"users": [x.jsonfy() for x in self.users]}
     def listfy(self):
-        return [[x.name, x.udp_address] for x in self.users]
+        return [[x.name, x.ip, x.porta] for x in self.users]
 
 
 class Server:
@@ -109,7 +98,7 @@ class Server:
                 elif state == "waiting_register" and msg.t == Message.kind("register"):
                     a_user = self.users.get(msg.user_name)
                     if a_user == None:
-                        this_user = User(conn, msg.user_name, msg.udp_address)
+                        this_user = User(conn, msg.user_name, msg.ip, msg.porta)
                         self.users.append(this_user)
                         self.send(Message("accepted_register"), this_user)
                         state = "idle"
@@ -142,6 +131,8 @@ class Server:
                     msg = None
                     
         except Exception as e:
+            if this_user:
+                self.users.remove(this_user)
             print(e)
             return
 

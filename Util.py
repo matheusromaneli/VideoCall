@@ -14,7 +14,7 @@ class Message:
         "unexpected_message",
         "register","accepted_register","declined_register","registry","not_found",
         "call_request","reject_call","accept_call","occupied",
-        "voice_packet","end_call",
+        "voice","end_call",
         "unregister","accepted_unregister",
         ]
 
@@ -73,6 +73,14 @@ class WSocket():
         print("$$ connection accepted!")
         return resp
 
+    def sendto(self, *args, **kwargs):
+        print("}}")
+        return super().sendto(*args, **kwargs)
+
+    def recvfrom(self, *args, **kwargs):
+        print("{{")
+        return super().recvfrom(*args, **kwargs)
+
     def send(self, msg: Message, *args, **kwargs):
         print(">>", msg.__repr__())
         self.socket.send(msg.encode() + b'\0', *args, **kwargs)
@@ -97,3 +105,20 @@ class WSocket():
             return super().__getattribute__(__name)
         except:
             return self.socket.__getattribute__(__name)
+
+
+class User:
+    def __init__(self, socket: WSocket, name: str, ip: str, porta: int):
+        self.name = name
+        self.ip = ip
+        self.porta = porta
+        self.socket = socket
+
+    def send(self, msg: Message):
+        self.socket.send(msg)
+
+    def recv(self, *args, **kwargs):
+        return self.socket.recv(*args, **kwargs)
+
+    def jsonfy(self):
+        return {'name':self.name, 'ip':self.ip, "porta":self.porta}
