@@ -187,8 +187,19 @@ class Window(QMainWindow):
         p = CallPopUp(self.client.name,self)
         return p.exec_()
 
+class VoiceRecorder():
+    def __init__(self, cliente: Client) -> None:
+        pass
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = Window()
     window.show()
+
+    ####
+    vc = VoiceRecorder(window.client)
+    # criar uma thread de um metodo de vc que checa o estado do client_udp. Se for on call, captura e manda voz
+    # criar um callback e tacar dentro da função received_voice, e dentro desse call back ele toca a voz pro usuário
+    ####
+    
     sys.exit(app.exec_())

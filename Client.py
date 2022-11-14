@@ -6,8 +6,8 @@ from socket import socket as Socket
 class Client:
     def __init__(
             self,
-            on_tcp_state_change = lambda new_state : None,
-            on_udp_state_change = lambda new_state : None
+            on_tcp_state_change = lambda : None,
+            on_udp_state_change = lambda : None
         ):
         self.name = None
         self.tcp = None
@@ -132,41 +132,6 @@ class Client:
             print(e)
             self.tcp_state = "offline"
 
-    def login(self, username):
-        self.send(Message("register", user_name=username, ip=self.udp_address[0], porta=self.udp_address[1]))
-    def logoff(self):
-        self.send(Message("unregister"))
-
-    def call_user(self, user_name):
-        self.last_registry = None
-        self.send(Message("registry", user_name=user_name))
-
-        while self.last_registry == None: ## Will be false if user doesnt exist
-            pass
-        if self.last_registry == False:
-            return
-
-        user_to_call = self.last_registry
-        self.call(user_to_call['ip'], user_to_call['porta'])
-
-    def respond_call_request(self, accept=1):
-        if accept:
-            self.udp_send(Message("accept_call", user_name = self.name), self.connected_to_udp)
-        else:
-            self.udp_send(Message("reject_call",  user_name = self.name), self.connected_to_udp)
-        
-
-    def call(self, ip, porta):
-        self.udp_send(Message("call_request", user_name= self.name),(ip,porta))
-    def end_call(self):
-        self.udp_send(Message("end_call"), self.connected_to_udp)
-
-    def send_voice(self, voice: bytes):
-        self.sendto(Message("voice", voice=voice).encode(), self.connected_to_udp)
-    def received_voice(self, voice: bytes):
-        ## Tocar o audio usando pyaudio
-        pass
-
     def udp_listen(self):
         msg = None
         while 1:
@@ -197,3 +162,40 @@ class Client:
                 self.connected_to_udp = None
                 self.connected_to_udp_username = None
                 self.udp_state = "idle"
+
+
+    def login(self, username):
+        self.send(Message("register", user_name=username, ip=self.udp_address[0], porta=self.udp_address[1]))
+    def logoff(self):
+        self.send(Message("unregister"))
+
+    def call_user(self, user_name):
+        self.last_registry = None
+        self.send(Message("registry", user_name=user_name))
+
+        while self.last_registry == None: ## Will be false if user doesnt exist
+            pass
+        if self.last_registry == False:
+            return
+
+        user_to_call = self.last_registry
+        self.call(user_to_call['ip'], user_to_call['porta'])
+
+    def respond_call_request(self, accept=1):
+        if accept:
+            self.udp_send(Message("accept_call", user_name = self.name), self.connected_to_udp)
+        else:
+            self.udp_send(Message("reject_call",  user_name = self.name), self.connected_to_udp)
+        
+
+    def call(self, ip, porta):
+        self.udp_send(Message("call_request", user_name= self.name),(ip,porta))
+    def end_call(self):
+        self.udp_send(Message("end_call"), self.connected_to_udp)
+
+    def send_voice(self, voice: bytes):
+        if self.connected_to_udp:
+            self.sendto(Message("voice", voice=voice).encode(), self.connected_to_udp)
+    def received_voice(self, voice: bytes):
+        ## Tocar o audio usando pyaudio
+        pass
