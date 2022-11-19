@@ -1,4 +1,5 @@
 import json
+from threading import Thread
 
 class Callable():
     def __init__(self, func, **kwargs) -> None:            
@@ -106,7 +107,9 @@ class WSocket():
         except:
             return self.socket.__getattribute__(__name)
 
-
+def thread(fn, args):
+    t = Thread(target=fn, args=args, daemon=True)
+    t.start()
 class User:
     def __init__(self, socket: WSocket, name: str, ip: str, porta: int):
         self.name = name

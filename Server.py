@@ -1,6 +1,6 @@
 from socket import socket as Socket
 import socket
-from threading import Thread
+
 from Util import *
 
 def table(cols,rows):
@@ -36,12 +36,6 @@ def table(cols,rows):
         out += "|\n"
         
     return out
- 
-
-def thread(fn, args):
-    t = Thread(target=fn, args=args, daemon=True)
-    t.start()
-
 
 class Users():
     def __init__(self, users = []):

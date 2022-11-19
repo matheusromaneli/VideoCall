@@ -4,7 +4,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
 from Client import Client
-
+import pyaudio
+from Util import thread
 class CallPopUp(QDialog):
     def __init__(self, user_name="An unamed user", *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -187,9 +188,43 @@ class Window(QMainWindow):
         p = CallPopUp(self.client.name,self)
         return p.exec_()
 
+
 class VoiceRecorder():
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 44100
+    audio = pyaudio.PyAudio()
+
     def __init__(self, cliente: Client) -> None:
-        pass
+        self.client = cliente
+        self.client.on_voice_receive = self.play_voice
+
+        self.streamin = self.audio.open(format=self.FORMAT, 
+                    channels=self.CHANNELS, 
+                    rate=self.RATE, 
+                    input=True, 
+                    frames_per_buffer=self.CHUNK)
+
+        self.streamout = self.streamin = self.audio.open(format=self.FORMAT, 
+                    channels=self.CHANNELS, 
+                    rate=self.RATE, 
+                    output=True, 
+                    frames_per_buffer=self.CHUNK)
+
+    def record_voice(self) -> bytes:
+        if self.client._udp_state == "on_call":
+            return self.streamin.read(self.CHUNK/2)
+
+    def record_and_send(self):
+        while 1:
+            data = self.record_voice()
+            if data:
+                self.client.send_voice(data)
+
+    def play_voice(self, voice: bytes):
+        self.streamout.write(voice)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -199,6 +234,7 @@ if __name__ == "__main__":
     ####
     vc = VoiceRecorder(window.client)
     # criar uma thread de um metodo de vc que checa o estado do client_udp. Se for on call, captura e manda voz
+    thread(vc.record_and_send, ())
     # criar um callback e tacar dentro da função received_voice, e dentro desse call back ele toca a voz pro usuário
     ####
     

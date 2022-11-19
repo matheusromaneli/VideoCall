@@ -1,14 +1,19 @@
 from Util import *
-from Server import thread
 import socket
 from socket import socket as Socket
+import pyaudio
 
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
 class Client:
     def __init__(
             self,
             on_tcp_state_change = lambda : None,
             on_udp_state_change = lambda : None
         ):
+        
         self.name = None
         self.tcp = None
         self.last_registry = None
@@ -23,6 +28,8 @@ class Client:
         self.on_tcp_state_change = on_tcp_state_change
         self._udp_state = "idle"
         self.on_udp_state_change = on_udp_state_change
+
+        self.on_voice_receive = lambda x : None
 
         thread(self.udp_listen, ())
 
@@ -198,4 +205,4 @@ class Client:
             self.sendto(Message("voice", voice=voice).encode(), self.connected_to_udp)
     def received_voice(self, voice: bytes):
         ## Tocar o audio usando pyaudio
-        pass
+        self.on_voice_receive(voice)
