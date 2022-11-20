@@ -6,6 +6,7 @@ import sys
 from client import Client
 import pyaudio
 from util import *
+from util.thread import thread
 
 class CallPopUp(QDialog):
     def __init__(self, user_name="An unamed user", *args, **kwargs):
