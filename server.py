@@ -1,5 +1,6 @@
 from socket import socket
 import socket
+from util.connection_table import ConnectionTable
 from util.message import Message
 from util.user import User
 from util.wsocket import WSocket
@@ -39,41 +40,11 @@ def table(cols,rows):
         
     return out
 
-class Users():
-    def __init__(self, users = []):
-        self.users = users
-
-    # def find_by(self, name: User):
-    #     for user in self.users:
-    #         if user.name == name:
-    #             return user
-
-    def find_by(self, key, value):
-        for user in self.users:
-            if user.__getattribute__(key) == value:
-                return user
-
-    def __iter__(self):
-        return iter(self.users)
-
-    def append(self, user: User):
-        self.users.append(user)
-        print(table(["Name", "Ip", "Porta"], self.listfy()))
-
-    def remove(self, user: User):
-        self.users.remove(user)
-
-    def jsonfy(self):
-        return {"users": [x.jsonfy() for x in self.users]}
-
-    def listfy(self):
-        return [[x.name, x.ip, x.porta] for x in self.users]
-
 
 class Server:
     def __init__(self, ip='localhost', port=5000) -> None:
         self.socket = WSocket(socket.create_server((ip,port)))
-        self.users = Users()
+        self.connections = ConnectionTable()
 
         thread(self.wait_connections,())
 
@@ -93,11 +64,11 @@ class Server:
                     message = connection.recv(1024)
 
                 elif state == "waiting_register" and message.type == Message.kind("register"):
-                    user = self.users.find_by("name", message.user_name)
+                    user = self.connections.find_by("name", message.user_name)
 
                     if user == None:
                         current_user = User(connection, message.user_name, message.ip, message.porta)
-                        self.users.append(current_user)
+                        self.connections.append(current_user)
                         self.send(Message("accepted_register"), current_user)
                         state = "idle"
                         message = None
@@ -109,7 +80,7 @@ class Server:
 
                 elif state == "idle":
                     if message.type == Message.kind("registry"):
-                        user = self.users.find_by("name", message.user_name)
+                        user = self.connections.find_by("name", message.user_name)
                         if user == None:
                             self.send(Message("not_found"), current_user)
                         else:
@@ -118,7 +89,7 @@ class Server:
 
                     elif message.type == Message.kind("unregister"):
                         self.send(Message("accepted_unregister"), current_user)
-                        self.users.remove(current_user)
+                        self.connections.remove(current_user)
                         connection.close()
                         return
                 
@@ -135,13 +106,9 @@ class Server:
                     
         except Exception as e:
             if current_user:
-                self.users.remove(current_user)
+                self.connections.remove(current_user)
             print(e)
             return
-
-    # def msend(self, message: Message, users):
-    #     for user in users:
-    #         self.send(message, user)
 
     def send(self, message: Message, user: User):
         user.send(message)
