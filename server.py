@@ -3,7 +3,7 @@ import socket
 from util.message import Message
 from util.user import User
 from util.wsocket import WSocket
-from util.thread import *
+from util.thread import thread
 
 def table(cols,rows):
     rows = [[str(x) for x in col] for col in rows]
@@ -43,11 +43,12 @@ class Users():
     def __init__(self, users = []):
         self.users = users
 
-    def get(self, name: User):
-        for user in self.users:
-            if user.name == name:
-                return user
-    def get_by(self, key, value):
+    # def find_by(self, name: User):
+    #     for user in self.users:
+    #         if user.name == name:
+    #             return user
+
+    def find_by(self, key, value):
         for user in self.users:
             if user.__getattribute__(key) == value:
                 return user
@@ -58,11 +59,13 @@ class Users():
     def append(self, user: User):
         self.users.append(user)
         print(table(["Name", "Ip", "Porta"], self.listfy()))
+
     def remove(self, user: User):
         self.users.remove(user)
 
     def jsonfy(self):
         return {"users": [x.jsonfy() for x in self.users]}
+
     def listfy(self):
         return [[x.name, x.ip, x.porta] for x in self.users]
 
@@ -82,58 +85,63 @@ class Server:
 
     def client_thread(self, connection: WSocket):
         try:
-            this_user = None
+            current_user = None
             state = "waiting_register"
             message = None
             while 1:
                 if message == None:
                     message = connection.recv(1024)
 
-                elif state == "waiting_register" and message.t == Message.kind("register"):
-                    a_user = self.users.get(message.user_name)
-                    if a_user == None:
-                        this_user = User(connection, message.user_name, message.ip, message.porta)
-                        self.users.append(this_user)
-                        self.send(Message("accepted_register"), this_user)
+                elif state == "waiting_register" and message.type == Message.kind("register"):
+                    user = self.users.find_by("name", message.user_name)
+
+                    if user == None:
+                        current_user = User(connection, message.user_name, message.ip, message.porta)
+                        self.users.append(current_user)
+                        self.send(Message("accepted_register"), current_user)
                         state = "idle"
                         message = None
+
                     else:
-                        self.send(Message("declined_register"), connection) ## Uses connection since this_user doesnt exist yet
-                        state = "waiting_register"
+                        #NOTE Send connection since current_user doesnt exist yet
+                        self.send(Message("declined_register"), connection) 
                         message = None
 
-                elif state == "idle" and message.t == Message.kind("registry"):
-                    a_user = self.users.get(message.user_name)
-                    if a_user == None:
-                        self.send(Message("not_found"), this_user)
-                    else:
-                        self.send(Message("registry",user=a_user.jsonfy()), this_user)
-                    message = None
-                    
+                elif state == "idle":
+                    if message.type == Message.kind("registry"):
+                        user = self.users.find_by("name", message.user_name)
+                        if user == None:
+                            self.send(Message("not_found"), current_user)
+                        else:
+                            self.send(Message("registry", user = user.jsonfy()), current_user)
+                        message = None
 
-                elif state == "idle" and message.t == Message.kind("unregister"):
-                    self.send(Message("accepted_unregister"),this_user)
-                    self.users.remove(this_user)
-                    connection.close()
-                    return
+                    elif message.type == Message.kind("unregister"):
+                        self.send(Message("accepted_unregister"), current_user)
+                        self.users.remove(current_user)
+                        connection.close()
+                        return
+                
+                    elif message.type == Message.kind("name_list"):
+                        self.send(Message("name_list"), )
+                        message = None
 
                 else:
-                    if this_user:
-                        self.send(Message("unexpected_message"),this_user)
+                    if current_user:
+                        self.send(Message("unexpected_message"), current_user)
                     else:
-                        self.send(Message("unexpected_message"),connection)
+                        self.send(Message("unexpected_message"), connection)
                     message = None
                     
         except Exception as e:
-            if this_user:
-                self.users.remove(this_user)
+            if current_user:
+                self.users.remove(current_user)
             print(e)
             return
 
-
-    def msend(self, message: Message, users):
-        for user in users:
-            self.send(message, user)
+    # def msend(self, message: Message, users):
+    #     for user in users:
+    #         self.send(message, user)
 
     def send(self, message: Message, user: User):
         user.send(message)
