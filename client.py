@@ -107,9 +107,6 @@ class Client:
             while 1:
                 msg = self.tcp.recv(1024)
 
-                # elif self.tcp_state == "unregistered":
-                #     pass
-
                 if self.tcp_state == "waiting_register" and msg.t == Message.kind("accepted_register"):
                     print("Succesfully registered!")
                     self.tcp_state = "idle"
@@ -119,11 +116,6 @@ class Client:
                     print("Some user with that name already exists! Choose another one.")
                     self.name = None
                     self.tcp_state = "unregistered"
-                    
-
-
-                # elif self.tcp_state == "idle":
-                #     pass
 
                 elif self.tcp_state == "waiting_registry" and msg.t == Message.kind("registry"):
                     self.last_registry = msg.user
@@ -175,6 +167,7 @@ class Client:
 
     def login(self, username):
         self.send(Message("register", user_name=username, ip=self.udp_address[0], porta=self.udp_address[1]))
+
     def logoff(self):
         self.send(Message("unregister"))
 
