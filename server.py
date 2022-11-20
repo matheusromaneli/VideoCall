@@ -15,16 +15,17 @@ class Server:
 
     def wait_connections(self):
         self.socket.listen()
-        while (1):
-            connection, _ = self.socket.accept()
-            thread(self.client_thread, (WSocket(connection)))
+        conn, _ = self.socket.accept()
+        with conn:
+            while True:
+                thread(self.client_thread, (WSocket(conn), ))
 
     def client_thread(self, connection: WSocket):
         try:
             current_user = None
             state = "waiting_register"
             message = None
-            while 1:
+            while True:
                 if message == None:
                     message = connection.recv(1024)
 
