@@ -1,4 +1,5 @@
 import json
+
 class Message:
     MESSAGE_TYPES = [
         "\0",## Avoid using null terminator by accident
@@ -16,29 +17,39 @@ class Message:
         "end_call",
         "unregister",
         "accepted_unregister",
+        "name_list"
     ]
 
-
-    def __init__(self, t: bytes, **kwargs):
-        if isinstance(t, str):
-            t = Message.kind(t)
-        self.t = t
+    def __init__(self, type: bytes, **kwargs):
+        if isinstance(type, str): 
+            type = Message.kind(type)
+        self.type = type
         self.info = kwargs
 
     def __str__(self) -> str:
-        return(Message.kind(self.t) + '\n' + json.dumps(self.info, sort_keys=True, indent=3))
+        return(
+            Message.kind(self.type) + '\n' + 
+            json.dumps(self.info, sort_keys=True, indent=3))
+
     def __repr__(self) -> str:
-        return(Message.kind(self.t) + '; ' + json.dumps(self.info, sort_keys=True))
+        return(
+            Message.kind(self.type) + '; ' + 
+            json.dumps(self.info, sort_keys=True))
 
     def kind(t):
         if isinstance(t, str):
             return bytes([Message.MESSAGE_TYPES.index(t)])
+
         elif isinstance(t, bytes) and len(t) == 1:
             return Message.MESSAGE_TYPES[int(t[0])]
+
         elif isinstance(t, int):
             return Message.MESSAGE_TYPES[t]
-        
-        raise Exception(f"Message type must be either a single byte, a string or an int. Got {type(t)}" + ["",f" of length {len(t)}"][isinstance(t, bytes)])
+
+        raise Exception(
+            f"Message type must be either a single byte, a string or an int. Got {type(t)}" + 
+            ["", f" of length {len(t)}"][isinstance(t, bytes)]
+        )
     
     ### Get attributes that aren't defined.
     def __getattribute__(self, __name: str):
@@ -52,13 +63,14 @@ class Message:
                 return None
 
     def encode(self) -> bytes:
-        return self.t + json.dumps(self.info).encode()
-    def decode(_o: bytes):
-        try:
-            t = _o[0]
-            info = json.loads(_o[1:])
+        return self.type + json.dumps(self.info).encode()
 
-            return Message(t=bytes([t]), **info)
+    def decode(data: bytes):
+        try:
+            type = data[0]
+            info = json.loads(data[1:])
+            return Message(type=bytes([type]), **info)
+
         except Exception as e:
             print(e)
             return None
