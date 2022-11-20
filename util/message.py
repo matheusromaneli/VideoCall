@@ -2,7 +2,7 @@ import json
 
 class Message:
     MESSAGE_TYPES = [
-        "\0",## Avoid using null terminator by accident
+        "\0",   #NOTE Avoid using null terminator by accident
         "unexpected_message",
         "register",
         "accepted_register",

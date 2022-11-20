@@ -175,6 +175,7 @@ class Window(QMainWindow):
 
     def connect(self):
         self.client.connect_to_server(self.ip.text())
+        
     def disconnect(self):
         self.client.logoff()
 
