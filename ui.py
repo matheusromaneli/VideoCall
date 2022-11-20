@@ -28,6 +28,7 @@ class CallPopUp(QDialog):
 
 class Window(QMainWindow):
     state_change = PyQt5.QtCore.pyqtSignal()
+
     def __init__(self):
         super(Window, self).__init__()
         self.setGeometry(100,100,600,400)
@@ -100,82 +101,84 @@ class Window(QMainWindow):
 
         ##### UDP ######
         if self.udp_state == "idle":
-            self.ec.setDisabled(1)
-            self.call_btn.setDisabled(0)
-        if self.udp_state == "waiting_response":
-            self.ec.setDisabled(0)
-            self.call_btn.setDisabled(1)
-        if self.udp_state == "received_request":
+            self.ec.setDisabled(True)
+            self.call_btn.setDisabled(False)
+
+        elif self.udp_state == "waiting_response":
+            self.ec.setDisabled(False)
+            self.call_btn.setDisabled(True)
+
+        elif self.udp_state == "received_request":
             self.client.respond_call_request(self.call_request_pop_up())
-            self.ec.setDisabled(1)
-            self.call_btn.setDisabled(1)
-        if self.udp_state == "on_call":
-            self.ec.setDisabled(0)
-            self.call_btn.setDisabled(1)
+            self.ec.setDisabled(True)
+            self.call_btn.setDisabled(True)
+
+        elif self.udp_state == "on_call":
+            self.ec.setDisabled(False)
+            self.call_btn.setDisabled(True)
 
 
         ###### TCP #######
         if self.tcp_state == "offline":
             ## Connect to server enabled
-            self.ip.setDisabled(0)
-            self.connect_btn.setDisabled(0)
+            self.ip.setDisabled(False)
+            self.connect_btn.setDisabled(False)
 
             ## Set name disbled
-            self.user_name.setDisabled(1)
-            self.login_btn.setDisabled(1)
+            self.user_name.setDisabled(True)
+            self.login_btn.setDisabled(True)
 
             ## Call disabled
-            self.dc.setDisabled(1)
-            self.call_btn.setDisabled(1)
-            self.user_to_call.setDisabled(1)
+            self.dc.setDisabled(True)
+            self.call_btn.setDisabled(True)
+            self.user_to_call.setDisabled(True)
             
         elif self.tcp_state == "unregistered":
             ## Connect to server enabled
-            self.ip.setDisabled(1)
-            self.connect_btn.setDisabled(1)
+            self.ip.setDisabled(True)
+            self.connect_btn.setDisabled(True)
 
             ## Set name disbled
-            self.user_name.setDisabled(0)
-            self.login_btn.setDisabled(0)
+            self.user_name.setDisabled(False)
+            self.login_btn.setDisabled(False)
 
             ## Call disabled
-            self.dc.setDisabled(1)
-            self.call_btn.setDisabled(1)
-            self.user_to_call.setDisabled(1)
+            self.dc.setDisabled(True)
+            self.call_btn.setDisabled(True)
+            self.user_to_call.setDisabled(True)
             
         elif self.tcp_state == "waiting_register":
             ## Connect to server enabled
-            self.ip.setDisabled(1)
-            self.connect_btn.setDisabled(1)
+            self.ip.setDisabled(True)
+            self.connect_btn.setDisabled(True)
 
             ## Set name disbled
-            self.user_name.setDisabled(1)
-            self.login_btn.setDisabled(1)
+            self.user_name.setDisabled(True)
+            self.login_btn.setDisabled(True)
 
             ## Call disabled
-            self.dc.setDisabled(1)
-            self.call_btn.setDisabled(1)
-            self.user_to_call.setDisabled(1)
+            self.dc.setDisabled(True)
+            self.call_btn.setDisabled(True)
+            self.user_to_call.setDisabled(True)
             
         elif self.tcp_state == "idle":
             ## Connect to server enabled
-            self.ip.setDisabled(1)
-            self.connect_btn.setDisabled(1)
+            self.ip.setDisabled(True)
+            self.connect_btn.setDisabled(True)
 
             ## Set name disbled
-            self.user_name.setDisabled(1)
-            self.login_btn.setDisabled(1)
+            self.user_name.setDisabled(True)
+            self.login_btn.setDisabled(True)
 
             ## Call disabled
-            self.dc.setDisabled(0)
-            self.call_btn.setDisabled(0)
-            self.user_to_call.setDisabled(0)
+            self.dc.setDisabled(False)
+            self.call_btn.setDisabled(False)
+            self.user_to_call.setDisabled(False)
         
-
 
     def connect(self):
         self.client.connect_to_server(self.ip.text())
-        
+
     def disconnect(self):
         self.client.logoff()
 
