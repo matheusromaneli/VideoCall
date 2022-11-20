@@ -1,3 +1,4 @@
+import base64
 from Util import *
 import socket
 from socket import socket as Socket
@@ -142,9 +143,8 @@ class Client:
     def udp_listen(self):
         msg = None
         while 1:
-            data, address = self.udp.recvfrom(1024)
+            data, address = self.udp.recvfrom(4096)
             msg = Message.decode(data)
-
             if self.udp_state == "idle" and msg.t == Message.kind("call_request"):
                 self.connected_to_udp = address
                 self.connected_to_udp_username = msg.user_name
@@ -164,7 +164,7 @@ class Client:
         
 
             elif self.udp_state == "on_call" and msg.t == Message.kind("voice") and address == self.connected_to_udp:
-                self.received_voice(msg.voice)
+                self.received_voice(base64.b64decode(msg.voice))
             elif self.udp_state == "on_call" and msg.t == Message.kind("end_call"):
                 self.connected_to_udp = None
                 self.connected_to_udp_username = None
@@ -202,7 +202,6 @@ class Client:
 
     def send_voice(self, voice: bytes):
         if self.connected_to_udp:
-            self.sendto(Message("voice", voice=voice).encode(), self.connected_to_udp)
+            self.udp_send(Message("voice", voice=base64.b64encode(voice).decode('ascii')), self.connected_to_udp)
     def received_voice(self, voice: bytes):
-        ## Tocar o audio usando pyaudio
         self.on_voice_receive(voice)

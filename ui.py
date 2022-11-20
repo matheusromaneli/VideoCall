@@ -206,7 +206,7 @@ class VoiceRecorder():
                     input=True, 
                     frames_per_buffer=self.CHUNK)
 
-        self.streamout = self.streamin = self.audio.open(format=self.FORMAT, 
+        self.streamout = self.audio.open(format=self.FORMAT, 
                     channels=self.CHANNELS, 
                     rate=self.RATE, 
                     output=True, 
@@ -214,7 +214,7 @@ class VoiceRecorder():
 
     def record_voice(self) -> bytes:
         if self.client._udp_state == "on_call":
-            return self.streamin.read(self.CHUNK/2)
+            return self.streamin.read(1024)
 
     def record_and_send(self):
         while 1:
