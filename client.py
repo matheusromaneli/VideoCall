@@ -1,5 +1,7 @@
 import base64
-from Util import *
+from util.message import Message
+from util.thread import thread
+from util.wsocket import WSocket
 import socket
 from socket import socket as Socket
 import pyaudio

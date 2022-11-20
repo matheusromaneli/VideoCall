@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
-from Client import Client
+from client import Client
 import pyaudio
-from Util import thread
+from util import *
+
 class CallPopUp(QDialog):
     def __init__(self, user_name="An unamed user", *args, **kwargs):
         super().__init__(*args, **kwargs)

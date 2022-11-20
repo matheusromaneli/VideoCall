@@ -1,7 +1,9 @@
-from socket import socket as Socket
+from socket import socket
 import socket
-
-from Util import *
+from util.message import Message
+from util.user import User
+from util.wsocket import WSocket
+from util.thread import *
 
 def table(cols,rows):
     rows = [[str(x) for x in col] for col in rows]
