@@ -69,62 +69,60 @@ class Users():
 
 class Server:
     def __init__(self, ip='localhost', port=5000) -> None:
-        self.s = socket.create_server((ip,port))
-        self.s = WSocket(self.s)
-
+        self.socket = WSocket(socket.create_server((ip,port)))
         self.users = Users()
+
         thread(self.wait_connections,())
 
     def wait_connections(self):
-        self.s.listen()
+        self.socket.listen()
         while (1):
-            conn, addr = self.s.accept()
-            thread(self.client_thread, (WSocket(conn),))
+            connection, _ = self.socket.accept()
+            thread(self.client_thread, (WSocket(connection)))
 
-    def client_thread(self, conn: WSocket):
+    def client_thread(self, connection: WSocket):
         try:
             this_user = None
             state = "waiting_register"
-            msg = None
+            message = None
             while 1:
-                if msg == None:
-                    msg = conn.recv(1024)
-                
+                if message == None:
+                    message = connection.recv(1024)
 
-                elif state == "waiting_register" and msg.t == Message.kind("register"):
-                    a_user = self.users.get(msg.user_name)
+                elif state == "waiting_register" and message.t == Message.kind("register"):
+                    a_user = self.users.get(message.user_name)
                     if a_user == None:
-                        this_user = User(conn, msg.user_name, msg.ip, msg.porta)
+                        this_user = User(connection, message.user_name, message.ip, message.porta)
                         self.users.append(this_user)
                         self.send(Message("accepted_register"), this_user)
                         state = "idle"
-                        msg = None
+                        message = None
                     else:
-                        self.send(Message("declined_register"), conn) ## Uses conn since this_user doesnt exist yet
+                        self.send(Message("declined_register"), connection) ## Uses connection since this_user doesnt exist yet
                         state = "waiting_register"
-                        msg = None
+                        message = None
 
-                elif state == "idle" and msg.t == Message.kind("registry"):
-                    a_user = self.users.get(msg.user_name)
+                elif state == "idle" and message.t == Message.kind("registry"):
+                    a_user = self.users.get(message.user_name)
                     if a_user == None:
                         self.send(Message("not_found"), this_user)
                     else:
                         self.send(Message("registry",user=a_user.jsonfy()), this_user)
-                    msg = None
+                    message = None
                     
 
-                elif state == "idle" and msg.t == Message.kind("unregister"):
+                elif state == "idle" and message.t == Message.kind("unregister"):
                     self.send(Message("accepted_unregister"),this_user)
                     self.users.remove(this_user)
-                    conn.close()
+                    connection.close()
                     return
 
                 else:
                     if this_user:
                         self.send(Message("unexpected_message"),this_user)
                     else:
-                        self.send(Message("unexpected_message"),conn)
-                    msg = None
+                        self.send(Message("unexpected_message"),connection)
+                    message = None
                     
         except Exception as e:
             if this_user:
@@ -136,5 +134,6 @@ class Server:
     def msend(self, message: Message, users):
         for user in users:
             self.send(message, user)
+
     def send(self, message: Message, user: User):
         user.send(message)
