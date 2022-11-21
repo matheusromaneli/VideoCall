@@ -21,7 +21,7 @@ class ConnectionTable():
         self.active_connections.remove(user)
 
     def jsonfy(self):
-        return {"users": [x.jsonfy() for x in self.active_connections]}
+        return {"users": [user.jsonfy() for user in self.active_connections]}
 
     def listfy(self):
-        return [[x.name, x.ip, x.porta] for x in self.active_connections]
+        return [[user.name, user.ip, user.porta] for user in self.active_connections]

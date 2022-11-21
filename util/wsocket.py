@@ -32,9 +32,10 @@ class WSocket():
         try:
             msg = Message.decode(msg)
             print("<<", msg.__repr__())
+
         except:
             return self.recv(*args, **kwargs) ## Ignore and try again
-        
+
         return msg ## Decoded correctly
 
     def __getattribute__(self, __name: str):
