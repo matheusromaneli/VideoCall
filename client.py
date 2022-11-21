@@ -20,6 +20,7 @@ class Client:
         self.name = None
         self.tcp = None
         self.last_registry = None
+        self.data = None
 
         self.udp = Socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.connected_to_udp = None
@@ -43,6 +44,7 @@ class Client:
             self.tcp = WSocket(Socket(family=socket.AF_INET, type=socket.SOCK_STREAM))
             self.tcp.connect((ip, port))
             thread(self.tcp_listen, ())
+
         except Exception as e:
             print("Failed to connect to server with error:\n", e)
 
@@ -70,18 +72,19 @@ class Client:
         return self.udp.getsockname()
     ###################
 
-    def send(self, msg: Message):
-        if msg.type == Message.kind("register") and self.tcp_state == "unregistered":
-            self.name = msg.user_name
+    def send(self, message: Message):
+        if self.tcp_state == "unregistered" and message.type == Message.kind("register"):
+            self.name = message.user_name
             self.tcp_state = "waiting_register"
 
-        if msg.type == Message.kind("registry") and self.tcp_state == "idle":
-            self.tcp_state = "waiting_registry"
+        elif self.tcp_state == "idle":
+            if message.type == Message.kind("registry"):
+                self.tcp_state = "waiting_registry"
 
-        if msg.type == Message.kind("unregister") and self.tcp_state == "idle":
-            self.tcp_state = "disconnecting"
+            elif message.type == Message.kind("unregister"):
+                self.tcp_state = "disconnecting"
 
-        self.tcp.send(msg)
+        self.tcp.send(message)
 
     def udp_send(self, msg: Message, address):
         if self.udp_state == "idle" and msg.type == Message.kind("call_request"):
@@ -111,7 +114,8 @@ class Client:
 
                 if self.tcp_state == "waiting_register":
                     if message.type == Message.kind("accepted_register"):
-                        print("Succesfully registered!")
+                        print("Succesfully registered!") #TODO "successfully logged in"
+                        self.data = message.data
                         self.tcp_state = "idle"
 
                     elif message.type == Message.kind("declined_register"):
