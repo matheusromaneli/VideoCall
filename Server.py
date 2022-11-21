@@ -66,7 +66,7 @@ class Users():
 
 
 class Server:
-    def __init__(self, ip='localhost', port=5000) -> None:
+    def __init__(self, ip=socket.gethostbyname(socket.gethostname()), port=5000) -> None:
         self.s = socket.create_server((ip,port))
         self.s = WSocket(self.s)
 

@@ -12,7 +12,8 @@ class Client:
     def __init__(
             self,
             on_tcp_state_change = lambda : None,
-            on_udp_state_change = lambda : None
+            on_udp_state_change = lambda : None,
+            self_ip = socket.gethostbyname(socket.gethostname())
         ):
         
         self.name = None
@@ -23,7 +24,7 @@ class Client:
         self.connected_to_udp = None
         self.connected_to_udp_username = "?"
 
-        self.udp.bind(("localhost",0))
+        self.udp.bind((self_ip,0))
 
         self._tcp_state = "offline"
         self.on_tcp_state_change = on_tcp_state_change
@@ -93,6 +94,9 @@ class Client:
             self.udp_state = "idle"
             self.connected_to_udp = None
             self.connected_to_udp_username = "?"
+
+        if msg.t == Message.kind("call_request") and self.udp_state in ["on_call", "waiting_response"]:
+            return
 
         if address == None:
             return
