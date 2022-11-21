@@ -1,12 +1,13 @@
+import sys
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-import sys
 from client import Client
 import pyaudio
 from util import *
 from util.thread import thread
+from util.connection_table import ConnectionTable
 
 class CallPopUp(QDialog):
     def __init__(self, user_name="An unamed user", *args, **kwargs):
@@ -40,17 +41,17 @@ class Window(QMainWindow):
         self.state_change.connect(self.updated_state)
         self.client = Client(self.state_change.emit, self.state_change.emit)
 
-        self.cw = QWidget()
-        self.setCentralWidget(self.cw)
-        flo = QFormLayout()
+        self.centralWidget = QWidget()
+        self.setCentralWidget(self.centralWidget)
+        formLayout = QFormLayout()
 
         ### Connection
         self.ip = QLineEdit()
         self.ip.setText("localhost")
         self.connect_btn = QPushButton('Connect to server', self)
         self.connect_btn.clicked.connect(self.connect)
-        flo.addRow("Ip: (0.0.0.0)", self.ip)
-        flo.addRow(self.connect_btn)
+        formLayout.addRow("Ip: (0.0.0.0)", self.ip)
+        formLayout.addRow(self.connect_btn)
         ###################
 
         ### Login
@@ -58,39 +59,50 @@ class Window(QMainWindow):
         self.user_name.setText("Bruno")
         self.login_btn = QPushButton('Login', self)
         self.login_btn.clicked.connect(self.login)
-        flo.addRow("Login as:", self.user_name)
-        flo.addRow(self.login_btn)
+        formLayout.addRow("Login as:", self.user_name)
+        formLayout.addRow(self.login_btn)
         ###################
 
         ### TCP server stuff
         self.server_status = QLabel(self)
         self.server_status.setGeometry(20,20,100,100)
         self.server_status.setText("[offline]")  
-        flo.addRow("Server stauts: ", self.server_status)
+        formLayout.addRow("Server stauts: ", self.server_status)
 
         self.user_to_call = QLineEdit()
-        flo.addRow("User name:", self.user_to_call)
+        formLayout.addRow("User name:", self.user_to_call)
         ###################
 
         ### Action bar
-        hbox = QHBoxLayout()
+        h_box_layout = QHBoxLayout()
         self.dc = QPushButton("Disconnect (from server)")
         self.dc.clicked.connect(self.disconnect)
-        hbox.addWidget(self.dc)
+        h_box_layout.addWidget(self.dc)
 
 
         self.call_btn = QPushButton('Call user')
         self.call_btn.clicked.connect(self.call)
-        hbox.addWidget(self.call_btn, 1)
+        h_box_layout.addWidget(self.call_btn, 1)
 
         self.ec = QPushButton("End Call")
         self.ec.clicked.connect(self.end_call)
-        hbox.addWidget(self.ec, 2)
+        h_box_layout.addWidget(self.ec, 2)
 
-        flo.addRow(hbox)
+        formLayout.addRow(h_box_layout)
         ###################
 
-        self.cw.setLayout(flo)
+        ### Connection Table
+        self.tableWidget =  QTableWidget()
+        self.tableWidget.setColumnCount(3)
+        self.tableWidget.setRowCount(3)
+        self.tableWidget.setHorizontalHeaderLabels(["Name", "IP", "Porta"])
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        v_box_layout = QVBoxLayout()
+        v_box_layout.addWidget(self.tableWidget)
+        formLayout.addRow(v_box_layout)
+        ###################
+
+        self.centralWidget.setLayout(formLayout)
 
         self.updated_state()
 
@@ -174,7 +186,8 @@ class Window(QMainWindow):
             self.dc.setDisabled(False)
             self.call_btn.setDisabled(False)
             self.user_to_call.setDisabled(False)
-        
+
+            self.update_connection_table()
 
     def connect(self):
         self.client.connect_to_server(self.ip.text())
@@ -187,13 +200,21 @@ class Window(QMainWindow):
 
     def call(self):
         self.client.call_user(self.user_to_call.text())
+
     def end_call(self):
         self.client.end_call()
-   
+
     def call_request_pop_up(self):
         p = CallPopUp(self.client.name,self)
         return p.exec_()
-
+    
+    def update_connection_table(self):
+        index = 0
+        for user in self.client.data["users"]:
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(user["name"]))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(user["ip"]))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(str(user["porta"])))
+            index += 1
 
 class VoiceRecorder():
     CHUNK = 1024
@@ -238,9 +259,9 @@ if __name__ == "__main__":
     window.show()
 
     ####
-    vc = VoiceRecorder(window.client)
+    vr = VoiceRecorder(window.client)
     # criar uma thread de um metodo de vc que checa o estado do client_udp. Se for on call, captura e manda voz
-    thread(vc.record_and_send, ())
+    thread(vr.record_and_send, ())
     # criar um callback e tacar dentro da função received_voice, e dentro desse call back ele toca a voz pro usuário
     ####
     
