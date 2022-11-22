@@ -169,7 +169,7 @@ class Window(QMainWindow):
             self.call_btn.setDisabled(False)
             self.user_to_call.setDisabled(False)
 
-            self.update_connection_table()
+            # self.update_connection_table()
 
     def connect(self):
         self.client.connect_to_server(self.ip.text())
