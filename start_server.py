@@ -1,4 +1,4 @@
-from server import *
+from app.server import *
 
 s = Server()
 

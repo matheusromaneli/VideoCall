@@ -34,7 +34,8 @@ class Server:
                     if user == None:
                         current_user = User(connection, message.user_name, message.ip, message.porta)
                         self.connections.append(current_user)
-                        self.send(Message("accepted_register", data = self.connections.jsonfy()), current_user)
+                        self.send(Message("accepted_register"), current_user)
+                        self.update_users_list()
                         state = "idle"
                         message = None
 
@@ -56,6 +57,7 @@ class Server:
                     elif message.type == Message.kind("unregister"):
                         self.send(Message("accepted_unregister"), current_user)
                         self.connections.remove(current_user)
+                        self.update_users_list()
                         connection.close()
                         return
 
@@ -74,3 +76,8 @@ class Server:
 
     def send(self, message: Message, user: User):
         user.send(message)
+
+    def update_users_list(self):
+        for connection in self.connections.active_connections:
+            user = self.connections.find_by("name", connection.name)
+            self.send(Message("users_list", data = self.connections.jsonfy()), user)

@@ -111,7 +111,6 @@ class Client:
                 if self.tcp_state == "waiting_register":
                     if message.type == Message.kind("accepted_register"):
                         print("Succesfully registered!") #TODO "successfully logged in"
-                        self.data = message.data
                         self.tcp_state = "idle"
 
                     elif message.type == Message.kind("declined_register"):
@@ -127,6 +126,10 @@ class Client:
                     elif message.type == Message.kind("not_found"):
                         self.last_registry = False
                         self.tcp_state = "idle"
+
+                elif self.tcp_state == "idle" and message.type == Message.kind("users_list"):
+                    self.data = message.data
+                    self.on_udp_state_change()
 
                 elif self.tcp_state == "disconnecting" and message.type == Message.kind("accepted_unregister"):
                     self.tcp.close()

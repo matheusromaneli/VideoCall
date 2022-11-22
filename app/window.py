@@ -4,29 +4,8 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from client import Client
-import pyaudio
-from util import *
-from util.thread import thread
-from util.connection_table import ConnectionTable
-
-class CallPopUp(QDialog):
-    def __init__(self, user_name="An unamed user", *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.setWindowTitle("Someone is calling you!")
-
-        QBtn = QDialogButtonBox.Yes | QDialogButtonBox.No
-
-        self.buttonBox = QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        self.layout = QVBoxLayout()
-        message = QLabel(f"{user_name} is calling you! Accept call?")
-        self.layout.addWidget(message)
-        self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
+from app.client import Client
+from app.components.call_pop_up import CallPopUp
 
 class Window(QMainWindow):
     state_change = PyQt5.QtCore.pyqtSignal()
@@ -145,6 +124,8 @@ class Window(QMainWindow):
             self.dc.setDisabled(True)
             self.call_btn.setDisabled(True)
             self.user_to_call.setDisabled(True)
+
+            self.clear_table()
             
         elif self.tcp_state == "unregistered":
             ## Connect to server enabled
@@ -210,60 +191,14 @@ class Window(QMainWindow):
         return p.exec_()
     
     def update_connection_table(self):
+        self.clear_table()
         index = 0
         for user in self.client.data["users"]:
             self.tableWidget.setItem(index, 0, QTableWidgetItem(user["name"]))
             self.tableWidget.setItem(index, 1, QTableWidgetItem(user["ip"]))
             self.tableWidget.setItem(index, 2, QTableWidgetItem(str(user["porta"])))
             index += 1
-
-class VoiceRecorder():
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 44100
-    audio = pyaudio.PyAudio()
-
-    def __init__(self, cliente: Client) -> None:
-        self.client = cliente
-        self.client.on_voice_receive = self.play_voice
-
-        self.streamin = self.audio.open(format=self.FORMAT, 
-                    channels=self.CHANNELS, 
-                    rate=self.RATE, 
-                    input=True, 
-                    frames_per_buffer=self.CHUNK)
-
-        self.streamout = self.audio.open(format=self.FORMAT, 
-                    channels=self.CHANNELS, 
-                    rate=self.RATE, 
-                    output=True, 
-                    frames_per_buffer=self.CHUNK)
-
-    def record_voice(self) -> bytes:
-        if self.client._udp_state == "on_call":
-            return self.streamin.read(1024)
-
-    def record_and_send(self):
-        while 1:
-            data = self.record_voice()
-            if data:
-                self.client.send_voice(data)
-
-    def play_voice(self, voice: bytes):
-        self.streamout.write(voice)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = Window()
-    window.show()
-
-    ####
-    vr = VoiceRecorder(window.client)
-    # criar uma thread de um metodo de vc que checa o estado do client_udp. Se for on call, captura e manda voz
-    thread(vr.record_and_send, ())
-    # criar um callback e tacar dentro da função received_voice, e dentro desse call back ele toca a voz pro usuário
-    ####
     
-    sys.exit(app.exec_())
+    def clear_table(self):
+        self.tableWidget.setRowCount(0)
+        self.tableWidget.setRowCount(3)
