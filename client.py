@@ -18,7 +18,7 @@ class Client:
         self.last_registry = None
         self.data = None
 
-        self.udp = Socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.udp = WSocket(Socket(family=socket.AF_INET, type=socket.SOCK_DGRAM))
         self.connected_to_udp = None
         self.connected_to_udp_username = "?"
 
