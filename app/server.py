@@ -7,7 +7,7 @@ from util.wsocket import WSocket
 from util.connection_table import ConnectionTable
 
 class Server:
-    def __init__(self, ip='localhost', port=5000) -> None:
+    def __init__(self, ip=socket.gethostbyname(socket.gethostname()), port=5000) -> None:
         self.socket = WSocket(socket.create_server((ip,port)))
         self.connections = ConnectionTable()
 

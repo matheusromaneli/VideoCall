@@ -11,12 +11,11 @@ class WSocket():
         return resp
 
     def sendto(self, *args, **kwargs):
-        print("}}")
-        return super().sendto(*args, **kwargs)
+        return self.socket.sendto(*args, **kwargs)
 
     def recvfrom(self, *args, **kwargs):
-        print("{{")
-        return super().recvfrom(*args, **kwargs)
+        resp = self.socket.recvfrom(*args, **kwargs)
+        return resp
 
     def send(self, msg: Message, *args, **kwargs):
         print(">>", msg.__repr__())

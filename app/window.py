@@ -1,4 +1,5 @@
-
+import socket
+import sys
 import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -26,7 +27,7 @@ class Window(QMainWindow):
 
         ### Connection
         self.ip = QLineEdit()
-        self.ip.setText("localhost")
+        self.ip.setText(socket.gethostbyname(socket.gethostname()))
         self.connect_btn = QPushButton('Connect to server', self)
         self.connect_btn.clicked.connect(self.connect)
         formLayout.addRow("Ip: (0.0.0.0)", self.ip)
