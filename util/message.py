@@ -17,7 +17,7 @@ class Message:
         "end_call",
         "unregister",
         "accepted_unregister",
-        "name_list"
+        "users_list"
     ]
 
     def __init__(self, type: bytes, **kwargs):
