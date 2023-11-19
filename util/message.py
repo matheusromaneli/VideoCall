@@ -1,8 +1,9 @@
 import json
 
+
 class Message:
     MESSAGE_TYPES = [
-        "\0",   #NOTE Avoid using null terminator by accident
+        "\0",  # NOTE Avoid using null terminator by accident
         "unexpected_message",
         "register",
         "accepted_register",
@@ -17,24 +18,24 @@ class Message:
         "end_call",
         "unregister",
         "accepted_unregister",
-        "users_list"
+        "users_list",
     ]
 
     def __init__(self, type: bytes, **kwargs):
-        if isinstance(type, str): 
+        if isinstance(type, str):
             type = Message.kind(type)
         self.type = type
         self.info = kwargs
 
     def __str__(self) -> str:
-        return(
-            Message.kind(self.type) + '\n' + 
-            json.dumps(self.info, sort_keys=True, indent=3))
+        return (
+            Message.kind(self.type)
+            + "\n"
+            + json.dumps(self.info, sort_keys=True, indent=3)
+        )
 
     def __repr__(self) -> str:
-        return(
-            Message.kind(self.type) + '; ' + 
-            json.dumps(self.info, sort_keys=True))
+        return Message.kind(self.type) + "; " + json.dumps(self.info, sort_keys=True)
 
     def kind(t):
         if isinstance(t, str):
@@ -47,10 +48,10 @@ class Message:
             return Message.MESSAGE_TYPES[t]
 
         raise Exception(
-            f"Message type must be either a single byte, a string or an int. Got {type(t)}" + 
-            ["", f" of length {len(t)}"][isinstance(t, bytes)]
+            f"Message type must be either a single byte, a string or an int. Got {type(t)}"
+            + ["", f" of length {len(t)}"][isinstance(t, bytes)]
         )
-    
+
     ### Get attributes that aren't defined.
     def __getattribute__(self, __name: str):
         try:

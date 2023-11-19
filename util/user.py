@@ -1,6 +1,7 @@
 from util.message import Message
 from util.wsocket import WSocket
 
+
 class User:
     def __init__(self, socket: WSocket, name: str, ip: str, porta: int):
         self.name = name
@@ -15,4 +16,4 @@ class User:
         return self.socket.recv(*args, **kwargs)
 
     def jsonfy(self):
-        return {'name':self.name, 'ip':self.ip, "porta":self.porta}
+        return {"name": self.name, "ip": self.ip, "porta": self.porta}

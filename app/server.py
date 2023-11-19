@@ -6,18 +6,21 @@ from util.message import Message
 from util.wsocket import WSocket
 from util.connection_table import ConnectionTable
 
+
 class Server:
-    def __init__(self, ip=socket.gethostbyname(socket.gethostname()), port=5000) -> None:
-        self.socket = WSocket(socket.create_server((ip,port)))
+    def __init__(
+        self, ip=socket.gethostbyname(socket.gethostname()), port=5000
+    ) -> None:
+        self.socket = WSocket(socket.create_server((ip, port)))
         self.connections = ConnectionTable()
 
-        thread(self.wait_connections,())
+        thread(self.wait_connections, ())
 
     def wait_connections(self):
         self.socket.listen()
         while True:
             conn, _ = self.socket.accept()
-            thread(self.client_thread, (WSocket(conn), ))
+            thread(self.client_thread, (WSocket(conn),))
 
     def client_thread(self, connection: WSocket):
         try:
@@ -28,11 +31,15 @@ class Server:
                 if message == None:
                     message = connection.recv(1024)
 
-                elif state == "waiting_register" and message.type == Message.kind("register"):
+                elif state == "waiting_register" and message.type == Message.kind(
+                    "register"
+                ):
                     user = self.connections.find_by("name", message.user_name)
 
                     if user == None:
-                        current_user = User(connection, message.user_name, message.ip, message.porta)
+                        current_user = User(
+                            connection, message.user_name, message.ip, message.porta
+                        )
                         self.connections.append(current_user)
                         self.send(Message("accepted_register"), current_user)
                         self.update_users_list()
@@ -40,8 +47,8 @@ class Server:
                         message = None
 
                     else:
-                        #NOTE Send connection since current_user doesnt exist yet
-                        self.send(Message("declined_register"), connection) 
+                        # NOTE Send connection since current_user doesnt exist yet
+                        self.send(Message("declined_register"), connection)
                         message = None
 
                 elif state == "idle":
@@ -51,7 +58,9 @@ class Server:
                             self.send(Message("not_found"), current_user)
 
                         else:
-                            self.send(Message("registry", user = user.jsonfy()), current_user)
+                            self.send(
+                                Message("registry", user=user.jsonfy()), current_user
+                            )
                         message = None
 
                     elif message.type == Message.kind("unregister"):
@@ -80,4 +89,4 @@ class Server:
     def update_users_list(self):
         for connection in self.connections.active_connections:
             user = self.connections.find_by("name", connection.name)
-            self.send(Message("users_list", data = self.connections.jsonfy()), user)
+            self.send(Message("users_list", data=self.connections.jsonfy()), user)

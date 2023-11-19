@@ -1,8 +1,9 @@
 from util.user import User
 from util.table import table
 
-class ConnectionTable():
-    def __init__(self, connections = []):
+
+class ConnectionTable:
+    def __init__(self, connections=[]):
         self.active_connections = connections
 
     def __iter__(self):
